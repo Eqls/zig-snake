@@ -1,0 +1,3 @@
+[submodule "zig-sdl"]
+	path = zig-sdl
+	url = git@github.com:andrewrk/zig-sdl.git
