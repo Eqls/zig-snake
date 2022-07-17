@@ -1,6 +1,6 @@
 16059 14598319 1644868999000000000 1e73699d858279e705f4c0c2fe214dd6 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/special/build_runner.zig
-1189 14607839 1657464742307729020 eedc21704d1eed0056b7b0b9f7494fea /Users/armandasgarsva/projects/zig-snake/build.zig
-2921 14617094 1657464885023508673 1bdfdeebc362dc37a91bf442138e5156 /Users/armandasgarsva/projects/zig-snake/zig-cache/o/04740f7befef064ea71aa2cbec510383/builtin.zig
+1267 14607839 1657902288631064933 ca19673c3527723c86b5d64b66eecf86 /Users/armandasgarsva/projects/zig-snake/build.zig
+2921 14698320 1657552009248737575 1bdfdeebc362dc37a91bf442138e5156 /Users/armandasgarsva/projects/zig-snake/zig-cache/o/04740f7befef064ea71aa2cbec510383/builtin.zig
 5391 14598201 1644868999000000000 99c935b1fadc1095742d1049c16b1f73 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/std.zig
 16059 14598319 1644868999000000000 1e73699d858279e705f4c0c2fe214dd6 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/special/build_runner.zig
 5391 14598201 1644868999000000000 99c935b1fadc1095742d1049c16b1f73 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/std.zig
@@ -45,7 +45,7 @@
 66319 14598166 1644868999000000000 38807f5fb27a6c237cb73dfeed92c02b /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/target/arm.zig
 5414 14598498 1644868999000000000 86e6f8806e70c6af94d5d60ee4a7bcc5 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/comptime_string_map.zig
 64655 14598604 1644868999000000000 f01914d0e21911461920e2cfe55c249d /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/sort.zig
-1189 14607839 1657464742307729020 eedc21704d1eed0056b7b0b9f7494fea /Users/armandasgarsva/projects/zig-snake/build.zig
+1267 14607839 1657902288631064933 ca19673c3527723c86b5d64b66eecf86 /Users/armandasgarsva/projects/zig-snake/build.zig
 75019 14598211 1644868999000000000 3384fdd738d671424dd29d56cf1517ee /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/macho.zig
 42277 14598208 1644868999000000000 bb8aca7bf5ec61c47aca7b6ebf08cb94 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/dwarf.zig
 5853 14598183 1644868999000000000 e4ebd554fff4f4347909d2e820cd323d /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/io/fixed_buffer_stream.zig
@@ -84,9 +84,9 @@
 23954 14598164 1644868999000000000 d560e058fb0aa249592791b30b91f3de /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/target/systemz.zig
 1240 14598170 1644868999000000000 9dff7d081463c1d9d077dd4e999d0a41 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/target/ve.zig
 3752 14598168 1644868999000000000 f975b0361e27b9d179b40936dd4e5b3a /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/target/wasm.zig
+127499 14598574 1644868999000000000 c34f941bc683d1597ce7899b65ef7fcc /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/os/windows.zig
 9090 14598496 1644868999000000000 1180d90b55f45cb947269ff038108378 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/log.zig
 550 14598647 1644868999000000000 d0adf8e4953b4bbcf3fd8c69ca636d2c /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/c/darwin/aarch64.zig
-127499 14598574 1644868999000000000 c34f941bc683d1597ce7899b65ef7fcc /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/os/windows.zig
 17584 14598474 1644868999000000000 b1953658a17e327b1d08fad152181220 /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/base64.zig
 8864 14598298 1644868999000000000 738e0bca47ce15392adf67703affdbdf /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/crypto.zig
 6380 14598083 1644868999000000000 a27d71b6f5ec5ea0574905ead03f9e2b /opt/homebrew/Cellar/zig/0.9.1_1/lib/zig/std/crypto/tlcsprng.zig

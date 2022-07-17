@@ -14,6 +14,10 @@ pub fn build(b: *std.build.Builder) void {
     const exe = b.addExecutable("zig-snake", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.linkSystemLibrary("SDL2");
+    // exe.addIncludeDir("/opt/homebrew/Cellar/sdl2/2.0.22/include");
+    // exe.addLibPath("/opt/homebrew/Cellar/sdl2/2.0.22/lib");
+    exe.linkLibC();
     exe.install();
 
     const run_cmd = exe.run();
