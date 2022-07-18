@@ -3,9 +3,29 @@ const c = @cImport({
     @cInclude("SDL.h");
 });
 
+const SnakeBlock = struct{
+    x: i32,
+    y: i32,
+};
+
+const blockWidth: i32 = 20;
+const blockHeight: i32 = 20;
+const startingX: i32 = 0;
+const startingY: i32 = 0;
+const startingLength = 1;
+const stepLength = blockHeight;
 var sdl_window: *c.SDL_Window = undefined;
 
+fn drawSnake(data: *std.ArrayList(SnakeBlock)) !void {
+    for (data.items) |block| {
+        c.SDL_Rect{.x = block.x, .y = block.y, .w = blockWidth, .h = blockHeight};
+    }
+}
+
 pub fn main() anyerror!void {
+    const allocator = std.heap.page_allocator;
+    var snake: std.ArrayList(SnakeBlock) = std.ArrayList(SnakeBlock).init(allocator);
+    defer snake.deinit();
       _ = c.SDL_Init(c.SDL_INIT_VIDEO);
     defer c.SDL_Quit();
 
@@ -15,34 +35,32 @@ pub fn main() anyerror!void {
     var renderer = c.SDL_CreateRenderer(window, 0, c.SDL_RENDERER_PRESENTVSYNC);
     defer c.SDL_DestroyRenderer(renderer);
 
+    try snake.append(.{.x = startingX, .y = startingY});
     var frame: usize = 0;
+
     mainloop: while (true) {
         var sdl_event: c.SDL_Event = undefined;
         while (c.SDL_PollEvent(&sdl_event) != 0) {
             switch (sdl_event.type) {
                 c.SDL_QUIT => break :mainloop,
+                c.SDL_KEYDOWN => {
+                    if (sdl_event.key.keysym.sym == c.SDLK_RIGHT) {
+                        var a = &snake.items[0];
+                        a.x = snake.items[0].x + stepLength;
+                    }
+                },
                 else => {},
             }
         }
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
-        var rect = c.SDL_Rect{ .x = 0, .y = 0, .w = 60, .h = 60 };
-        const a = 0.06 * @intToFloat(f32, frame);
-        const t = 2 * std.math.pi / 3.0;
-        const r = 100 * @cos(0.1 * a);
-        rect.x = 290 + @floatToInt(i32, r * @cos(a));
-        rect.y = 170 + @floatToInt(i32, r * @sin(a));
-        _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0, 0, 0xff);
-        _ = c.SDL_RenderFillRect(renderer, &rect);
-        rect.x = 290 + @floatToInt(i32, r * @cos(a + t));
-        rect.y = 170 + @floatToInt(i32, r * @sin(a + t));
-        _ = c.SDL_SetRenderDrawColor(renderer, 0, 0xff, 0, 0xff);
-        _ = c.SDL_RenderFillRect(renderer, &rect);
-        rect.x = 290 + @floatToInt(i32, r * @cos(a + 2 * t));
-        rect.y = 170 + @floatToInt(i32, r * @sin(a + 2 * t));
+        // var rect = drawSnake(&snake);
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
-        _ = c.SDL_RenderFillRect(renderer, &rect);
+        for (snake.items) |block| {
+           var rect = c.SDL_Rect{.x = block.x, .y = block.y, .w = blockWidth, .h = blockHeight};
+            _ = c.SDL_RenderFillRect(renderer, &rect);
+        }
         c.SDL_RenderPresent(renderer);
         frame += 1;
     }
