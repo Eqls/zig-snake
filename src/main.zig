@@ -18,35 +18,69 @@ const SnakeBlock = struct {
 
 const blockWidth: i32 = 20;
 const blockHeight: i32 = 20;
-const startingX: i32 = 0;
-const startingY: i32 = 0;
+const startingX: i32 = 300;
+const startingY: i32 = 200;
 const startingLength = 1;
-const stepLength = blockHeight;
+const fps: i32 = 60;
+const stepLength: i32 = 100 / fps;
+const timePerFrame: u32 = 1000 / fps;
 var sdl_window: *c.SDL_Window = undefined;
 
 fn update_pos(snake: *std.ArrayList(SnakeBlock)) !void {
     var modified = false;
-    for (snake.items) |block, index| {
-        const previousDirection = &snake.items[index - 1].direction;
-        if (!modified and previousDirection != &block.direction) {
-            block.direction = previousDirection;
+    for (snake.items) |_, index| {
+        var block = &snake.items[index];
+
+        if (!modified and index != 0 and snake.items[index - 1].direction != block.direction) {
+            block.direction = snake.items[index - 1].direction;
             modified = true;
         }
 
         switch (block.direction) {
             .down => {
-                block.y += stepLength;
+                if (index != 0 and snake.items[index - 1].x != block.x) {
+                    if (snake.items[index - 1].x > block.x) {
+                        block.x += stepLength;
+                    } else {
+                        block.x -= stepLength;
+                    }
+                } else {
+                    block.y += stepLength;
+                }
             },
             .up => {
-                block.y -= stepLength;
+                if (index != 0 and snake.items[index - 1].x != block.x) {
+                    if (snake.items[index - 1].x > block.x) {
+                        block.x += stepLength;
+                    } else {
+                        block.x -= stepLength;
+                    }
+                } else {
+                    block.y -= stepLength;
+                }
             },
             .right => {
-                block.x += stepLength;
+                if (index != 0 and snake.items[index - 1].y != block.y) {
+                    if (snake.items[index - 1].y > block.y) {
+                        block.y += stepLength;
+                    } else {
+                        block.y -= stepLength;
+                    }
+                } else {
+                    block.x += stepLength;
+                }
             },
             .left => {
-                block.x -= stepLength;
+                if (index != 0 and snake.items[index - 1].y != block.y) {
+                    if (snake.items[index - 1].y > block.y) {
+                        block.y += stepLength;
+                    } else {
+                        block.y -= stepLength;
+                    }
+                } else {
+                    block.x -= stepLength;
+                }
             },
-            else => {},
         }
     }
 }
@@ -65,9 +99,24 @@ pub fn main() anyerror!void {
     defer c.SDL_DestroyRenderer(renderer);
 
     try snake.append(.{ .x = startingX, .y = startingY, .direction = Direction.right });
-    var frame: usize = 0;
+    try snake.append(.{ .x = startingX - blockWidth, .y = startingY, .direction = Direction.right });
+    try snake.append(.{ .x = startingX - blockWidth * 2, .y = startingY, .direction = Direction.right });
+    var startTime: u32 = 0;
+    var endTime: u32 = 0;
+    var delta: u32 = 0;
 
     mainloop: while (true) {
+        if(startTime == 0) {
+            startTime = c.SDL_GetTicks();
+        } else {
+            delta = endTime -% startTime;
+        }
+        // std.debug.print("{}\n", .{delta});
+        std.debug.print("{}\n", .{&snake.items});
+        if (delta < timePerFrame) {
+            _ = c.SDL_Delay(timePerFrame - delta);
+        }
+
         var sdl_event: c.SDL_Event = undefined;
         while (c.SDL_PollEvent(&sdl_event) != 0) {
             switch (sdl_event.type) {
@@ -103,8 +152,9 @@ pub fn main() anyerror!void {
             var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = blockWidth, .h = blockHeight };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
-        c.SDL_RenderPresent(renderer);
-        frame += 1;
+        _ = c.SDL_RenderPresent(renderer);
+        startTime = endTime;
+        endTime = c.SDL_GetTicks();
     }
 }
 
