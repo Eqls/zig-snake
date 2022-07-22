@@ -10,6 +10,11 @@ const Direction = enum {
     right,
 };
 
+const MovementType = enum {
+    horizontal,
+    vertical,
+};
+
 const SnakeBlock = struct {
     x: i32,
     y: i32,
@@ -26,60 +31,53 @@ const stepLength: i32 = 100 / fps;
 const timePerFrame: u32 = 1000 / fps;
 var sdl_window: *c.SDL_Window = undefined;
 
-fn update_pos(snake: *std.ArrayList(SnakeBlock)) !void {
-    var modified = false;
+fn getMovementType(direction: Direction) MovementType {
+    return switch (direction) {
+        .down, .up => MovementType.vertical,
+        .left, .right => MovementType.horizontal,
+    };
+}
+
+fn updatePos(snake: *std.ArrayList(SnakeBlock)) !void {
     for (snake.items) |_, index| {
         var block = &snake.items[index];
-
-        if (!modified and index != 0 and snake.items[index - 1].direction != block.direction) {
+        var current_movement_type = getMovementType(snake.items[index].direction);
+        var haveNext = index + 1 >= snake.capacity;
+        std.debug.print("{}", .{current_movement_type});
+        if (index != 0 and getMovementType(snake.items[index - 1].direction) != current_movement_type and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
+            if (current_movement_type == MovementType.horizontal) {
+                if (block.x < snake.items[index - 1].x) {
+                    block.direction = Direction.right;
+                } else if (block.x > snake.items[index - 1].x) {
+                    block.direction = Direction.left;
+                } else {
+                    block.direction = snake.items[index - 1].direction;
+                }
+            } else {
+                if (block.y < snake.items[index - 1].y) {
+                    block.direction = Direction.down;
+                } else if (block.y > snake.items[index - 1].y) {
+                    block.direction = Direction.up;
+                } else {
+                    block.direction = snake.items[index - 1].direction;
+                }
+            }
+        } else if (index != 0 and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
             block.direction = snake.items[index - 1].direction;
-            modified = true;
         }
 
         switch (block.direction) {
             .down => {
-                if (index != 0 and snake.items[index - 1].x != block.x) {
-                    if (snake.items[index - 1].x > block.x) {
-                        block.x += stepLength;
-                    } else {
-                        block.x -= stepLength;
-                    }
-                } else {
-                    block.y += stepLength;
-                }
+                block.y += stepLength;
             },
             .up => {
-                if (index != 0 and snake.items[index - 1].x != block.x) {
-                    if (snake.items[index - 1].x > block.x) {
-                        block.x += stepLength;
-                    } else {
-                        block.x -= stepLength;
-                    }
-                } else {
-                    block.y -= stepLength;
-                }
+                block.y -= stepLength;
             },
             .right => {
-                if (index != 0 and snake.items[index - 1].y != block.y) {
-                    if (snake.items[index - 1].y > block.y) {
-                        block.y += stepLength;
-                    } else {
-                        block.y -= stepLength;
-                    }
-                } else {
-                    block.x += stepLength;
-                }
+                block.x += stepLength;
             },
             .left => {
-                if (index != 0 and snake.items[index - 1].y != block.y) {
-                    if (snake.items[index - 1].y > block.y) {
-                        block.y += stepLength;
-                    } else {
-                        block.y -= stepLength;
-                    }
-                } else {
-                    block.x -= stepLength;
-                }
+                block.x -= stepLength;
             },
         }
     }
@@ -101,15 +99,19 @@ pub fn main() anyerror!void {
     try snake.append(.{ .x = startingX, .y = startingY, .direction = Direction.right });
     try snake.append(.{ .x = startingX - blockWidth, .y = startingY, .direction = Direction.right });
     try snake.append(.{ .x = startingX - blockWidth * 2, .y = startingY, .direction = Direction.right });
-    var startTime: u32 = 0;
-    var endTime: u32 = 0;
+    try snake.append(.{ .x = startingX - blockWidth * 3, .y = startingY, .direction = Direction.right });
+    try snake.append(.{ .x = startingX - blockWidth * 4, .y = startingY, .direction = Direction.right });
+    try snake.append(.{ .x = startingX - blockWidth * 5, .y = startingY, .direction = Direction.right });
+    try snake.append(.{ .x = startingX - blockWidth * 6, .y = startingY, .direction = Direction.right });
+    var start_time: u32 = 0;
+    var end_time: u32 = 0;
     var delta: u32 = 0;
 
     mainloop: while (true) {
-        if(startTime == 0) {
-            startTime = c.SDL_GetTicks();
+        if (start_time == 0) {
+            start_time = c.SDL_GetTicks();
         } else {
-            delta = endTime -% startTime;
+            delta = end_time -% start_time;
         }
         // std.debug.print("{}\n", .{delta});
         std.debug.print("{}\n", .{&snake.items});
@@ -143,7 +145,7 @@ pub fn main() anyerror!void {
             }
         }
 
-        try update_pos(&snake);
+        try updatePos(&snake);
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
         // var rect = drawSnake(&snake);
@@ -153,8 +155,8 @@ pub fn main() anyerror!void {
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
         _ = c.SDL_RenderPresent(renderer);
-        startTime = endTime;
-        endTime = c.SDL_GetTicks();
+        start_time = end_time;
+        end_time = c.SDL_GetTicks();
     }
 }
 
