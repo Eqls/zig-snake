@@ -3,23 +3,12 @@ const c = @cImport({
     @cInclude("SDL.h");
 });
 
-const Direction = enum {
-    up,
-    down,
-    left,
-    right,
-};
-
 const MovementType = enum {
     horizontal,
     vertical,
 };
 
-const SnakeBlock = struct {
-    x: i32,
-    y: i32,
-    direction: Direction,
-};
+
 
 const blockWidth: i32 = 20;
 const blockHeight: i32 = 20;
@@ -44,7 +33,8 @@ fn updatePos(snake: *std.ArrayList(SnakeBlock)) !void {
         var current_movement_type = getMovementType(snake.items[index].direction);
         var haveNext = index + 1 >= snake.capacity;
         std.debug.print("{}", .{current_movement_type});
-        if (index != 0 and getMovementType(snake.items[index - 1].direction) != current_movement_type and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
+        if (index != 0 and getMovementType(snake.items[index - 1].direction) != current_movement_type
+                and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
             if (current_movement_type == MovementType.horizontal) {
                 if (block.x < snake.items[index - 1].x) {
                     block.direction = Direction.right;
