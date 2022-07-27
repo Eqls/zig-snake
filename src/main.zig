@@ -1,82 +1,19 @@
 const std = @import("std");
+const g = @import("game.zig");
+const Game = g.Game;
 const c = @cImport({
     @cInclude("SDL.h");
 });
+const Direction = g.Direction;
+const BLOCK_HEIGHT = g.BLOCK_HEIGHT;
+const BLOCK_WIDTH = g.BLOCK_WIDTH;
 
-const MovementType = enum {
-    horizontal,
-    vertical,
-};
-
-
-
-const blockWidth: i32 = 20;
-const blockHeight: i32 = 20;
-const startingX: i32 = 300;
-const startingY: i32 = 200;
-const startingLength = 1;
 const fps: i32 = 60;
-const stepLength: i32 = 100 / fps;
-const timePerFrame: u32 = 1000 / fps;
+const step_length: i32 = 100 / fps;
+const time_per_frame: u32 = 1000 / fps;
 var sdl_window: *c.SDL_Window = undefined;
 
-fn getMovementType(direction: Direction) MovementType {
-    return switch (direction) {
-        .down, .up => MovementType.vertical,
-        .left, .right => MovementType.horizontal,
-    };
-}
-
-fn updatePos(snake: *std.ArrayList(SnakeBlock)) !void {
-    for (snake.items) |_, index| {
-        var block = &snake.items[index];
-        var current_movement_type = getMovementType(snake.items[index].direction);
-        var haveNext = index + 1 >= snake.capacity;
-        std.debug.print("{}", .{current_movement_type});
-        if (index != 0 and getMovementType(snake.items[index - 1].direction) != current_movement_type
-                and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
-            if (current_movement_type == MovementType.horizontal) {
-                if (block.x < snake.items[index - 1].x) {
-                    block.direction = Direction.right;
-                } else if (block.x > snake.items[index - 1].x) {
-                    block.direction = Direction.left;
-                } else {
-                    block.direction = snake.items[index - 1].direction;
-                }
-            } else {
-                if (block.y < snake.items[index - 1].y) {
-                    block.direction = Direction.down;
-                } else if (block.y > snake.items[index - 1].y) {
-                    block.direction = Direction.up;
-                } else {
-                    block.direction = snake.items[index - 1].direction;
-                }
-            }
-        } else if (index != 0 and (!haveNext or current_movement_type == getMovementType(snake.items[index + 1].direction))) {
-            block.direction = snake.items[index - 1].direction;
-        }
-
-        switch (block.direction) {
-            .down => {
-                block.y += stepLength;
-            },
-            .up => {
-                block.y -= stepLength;
-            },
-            .right => {
-                block.x += stepLength;
-            },
-            .left => {
-                block.x -= stepLength;
-            },
-        }
-    }
-}
-
 pub fn main() anyerror!void {
-    const allocator = std.heap.page_allocator;
-    var snake: std.ArrayList(SnakeBlock) = std.ArrayList(SnakeBlock).init(allocator);
-    defer snake.deinit();
     _ = c.SDL_Init(c.SDL_INIT_VIDEO);
     defer c.SDL_Quit();
 
@@ -86,17 +23,14 @@ pub fn main() anyerror!void {
     var renderer = c.SDL_CreateRenderer(window, 0, c.SDL_RENDERER_PRESENTVSYNC);
     defer c.SDL_DestroyRenderer(renderer);
 
-    try snake.append(.{ .x = startingX, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth * 2, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth * 3, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth * 4, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth * 5, .y = startingY, .direction = Direction.right });
-    try snake.append(.{ .x = startingX - blockWidth * 6, .y = startingY, .direction = Direction.right });
     var start_time: u32 = 0;
     var end_time: u32 = 0;
     var delta: u32 = 0;
+    var game = try Game.init(step_length);
+    defer game.deinit();
 
+    try game.grow();
+    try game.grow();
     mainloop: while (true) {
         if (start_time == 0) {
             start_time = c.SDL_GetTicks();
@@ -104,44 +38,33 @@ pub fn main() anyerror!void {
             delta = end_time -% start_time;
         }
         // std.debug.print("{}\n", .{delta});
-        std.debug.print("{}\n", .{&snake.items});
-        if (delta < timePerFrame) {
-            _ = c.SDL_Delay(timePerFrame - delta);
+        if (delta < time_per_frame) {
+            _ = c.SDL_Delay(time_per_frame - delta);
         }
 
         var sdl_event: c.SDL_Event = undefined;
         while (c.SDL_PollEvent(&sdl_event) != 0) {
             switch (sdl_event.type) {
                 c.SDL_QUIT => break :mainloop,
-                c.SDL_KEYDOWN => {
-                    var genesisBlock = &snake.items[0];
-                    switch (sdl_event.key.keysym.sym) {
-                        c.SDLK_RIGHT => {
-                            genesisBlock.direction = Direction.right;
-                        },
-                        c.SDLK_LEFT => {
-                            genesisBlock.direction = Direction.left;
-                        },
-                        c.SDLK_UP => {
-                            genesisBlock.direction = Direction.up;
-                        },
-                        c.SDLK_DOWN => {
-                            genesisBlock.direction = Direction.down;
-                        },
-                        else => {},
-                    }
+                c.SDL_KEYDOWN => switch (sdl_event.key.keysym.sym) {
+                    c.SDLK_RIGHT => game.move(Direction.RIGHT),
+                    c.SDLK_LEFT => game.move(Direction.LEFT),
+                    c.SDLK_UP => game.move(Direction.UP),
+                    c.SDLK_DOWN => game.move(Direction.DOWN),
+                    else => {},
                 },
                 else => {},
             }
         }
 
-        try updatePos(&snake);
+        try game.update();
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
-        // var rect = drawSnake(&snake);
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
-        for (snake.items) |block| {
-            var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = blockWidth, .h = blockHeight };
+        var head_rect = c.SDL_Rect{ .x = game.head.x, .y = game.head.y, .w = BLOCK_WIDTH, .h = BLOCK_HEIGHT };
+        _ = c.SDL_RenderFillRect(renderer, &head_rect);
+        for (game.tail.items) |block| {
+            var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = BLOCK_WIDTH, .h = BLOCK_HEIGHT };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
         _ = c.SDL_RenderPresent(renderer);
