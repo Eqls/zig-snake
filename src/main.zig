@@ -30,7 +30,13 @@ pub fn main() anyerror!void {
     defer game.deinit();
 
     try game.grow();
-    try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
     mainloop: while (true) {
         if (start_time == 0) {
             start_time = c.SDL_GetTicks();
@@ -47,10 +53,10 @@ pub fn main() anyerror!void {
             switch (sdl_event.type) {
                 c.SDL_QUIT => break :mainloop,
                 c.SDL_KEYDOWN => switch (sdl_event.key.keysym.sym) {
-                    c.SDLK_RIGHT => game.move(Direction.RIGHT),
-                    c.SDLK_LEFT => game.move(Direction.LEFT),
-                    c.SDLK_UP => game.move(Direction.UP),
-                    c.SDLK_DOWN => game.move(Direction.DOWN),
+                    c.SDLK_RIGHT => try game.move(Direction.RIGHT),
+                    c.SDLK_LEFT => try game.move(Direction.LEFT),
+                    c.SDLK_UP => try game.move(Direction.UP),
+                    c.SDLK_DOWN => try game.move(Direction.DOWN),
                     else => {},
                 },
                 else => {},

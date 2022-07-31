@@ -7,15 +7,21 @@ pub const Direction = enum {
     RIGHT,
 };
 
-const Head = struct {
+const Block = struct {
     x: i32,
     y: i32,
     direction: Direction,
 };
 
-const Tail = struct {
+const Coordinates = struct {
     x: i32,
     y: i32,
+};
+
+const Queue = struct {
+    pos: Coordinates,
+    direction: Direction,
+    index: usize,
 };
 
 const starting_x: i32 = 300;
@@ -24,21 +30,23 @@ pub const BLOCK_WIDTH: i32 = 20;
 pub const BLOCK_HEIGHT: i32 = 20;
 
 pub const Game = struct {
-    head: Head,
-    tail: std.ArrayList(Tail),
+    head: Block,
+    tail: std.ArrayList(Block),
     step_length: i32,
+    queue: std.ArrayList(Queue),
 
     pub fn init(step_length: i32) !Game {
         const allocator = std.heap.page_allocator;
 
         return Game{
-            .head = Head {
+            .head = Block{
                 .x = starting_x,
                 .y = starting_y,
                 .direction = Direction.RIGHT,
             },
-            .tail = std.ArrayList(Tail).init(allocator),
+            .tail = std.ArrayList(Block).init(allocator),
             .step_length = step_length,
+            .queue = std.ArrayList(Queue).init(allocator),
         };
     }
 
@@ -47,35 +55,87 @@ pub const Game = struct {
     }
 
     pub fn grow(self: *Game) !void {
-        try self.tail.append(Tail { .x = 0, .y = 0});
-       // if(self.tail.items.len > 0) {
-       //     self.tail.append(Tail { .x = self.tail.items[self.tail.items.len - 1].x + BLOCK_WIDTH, .y = self.tail.items[self.tail.items.len - 1].y + BLOCK_WIDTH});
-       // } else {
-       //     self.tail.append(Tail { .x = self.head.x + BLOCK_WIDTH, .y = self.head.y + BLOCK_WIDTH});
-       // }
+        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH * 2, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH * 3, .y = starting_y, .direction = Direction.RIGHT });
+    }
+
+    // fn updateDirection
+
+    fn getQueueIndexByBlockIndex(self: *Game, index: usize) usize {
+        for (self.queue.items) |item, i| {
+            if (item.index == index) {
+                return i;
+            }
+        }
+
+        return undefined;
+    }
+
+    fn removeQueueItemByBlockIndex(self: *Game, index: usize) void {
+        for (self.queue.items) |item, i| {
+            if (item.index == index) {
+                _ = self.queue.orderedRemove(i);
+            }
+        }
     }
 
     pub fn update(self: *Game) !void {
+        self.moveBlock(&self.head);
         for (self.tail.items) |_, index| {
             var block = &self.tail.items[index];
-            if (index == 0) {
-                block.* = Tail { .x = self.head.x, .y = self.head.y };
+            var queue_index = self.getQueueIndexByBlockIndex(index);
 
-                continue;
+            if (self.queue.items.len > 0 and queue_index < self.queue.items.len) {
+                std.debug.print("{}\n", .{queue_index});
+                var target = &self.queue.items[queue_index];
+                std.debug.print("{}\n", .{target});
+                if (target != undefined and target.direction != block.direction) {
+                    switch (target.direction) {
+                        .UP, .DOWN => {
+                            std.debug.print("target y:{} block y: {}\n", .{ target.pos.y, block.y });
+                            if (target.pos.x == block.x) {
+                                block.direction = target.direction;
+                                if (target.index == self.tail.items.len - 1) {
+                                    self.removeQueueItemByBlockIndex(index);
+                                } else {
+                                    target.index += 1;
+                                }
+                            }
+                        },
+                        .LEFT, .RIGHT => {
+                            std.debug.print("target x:{} block x: {}\n", .{ target.pos.x, block.x });
+                            if (target.pos.y == block.y) {
+                                block.direction = target.direction;
+                                if (target.index == self.tail.items.len - 1) {
+                                    self.removeQueueItemByBlockIndex(index);
+                                } else {
+                                    target.index += 1;
+                                }
+                            }
+                        },
+                    }
+                }
             }
-            block.x = self.tail.items[index - 1].x - BLOCK_WIDTH;
-            block.y = self.tail.items[index - 1].y;
-        }
-
-        switch (self.head.direction) {
-            .DOWN => self.head.y += self.step_length,
-            .UP => self.head.y -= self.step_length,
-            .RIGHT => self.head.x += self.step_length,
-            .LEFT => self.head.x -= self.step_length,
+            self.moveBlock(block);
         }
     }
 
-    pub fn move(self: *Game, direction: Direction) void {
+    fn moveBlock(self: *Game, block: *Block) void {
+        switch (block.direction) {
+            .DOWN => block.y += self.step_length,
+            .UP => block.y -= self.step_length,
+            .RIGHT => block.x += self.step_length,
+            .LEFT => block.x -= self.step_length,
+        }
+    }
+
+    pub fn move(self: *Game, direction: Direction) !void {
+        const direction_changed = self.head.direction != direction;
+        std.debug.print("{}\n", .{self.queue.items.len});
         self.head.direction = direction;
+        if (direction_changed or self.queue.items.len == 0) {
+            try self.queue.append(Queue{ .direction = direction, .index = 0, .pos = Coordinates{ .x = self.head.x, .y = self.head.y } });
+        }
     }
 };
