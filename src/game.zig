@@ -1,5 +1,10 @@
 const std = @import("std");
 
+const Axis = enum {
+    Y,
+    X,
+};
+
 pub const Direction = enum {
     UP,
     DOWN,
@@ -28,6 +33,13 @@ const starting_x: i32 = 300;
 const starting_y: i32 = 200;
 pub const BLOCK_WIDTH: i32 = 20;
 pub const BLOCK_HEIGHT: i32 = 20;
+
+fn getAxis(direction: Direction) Axis {
+    return switch(direction) {
+        .DOWN, .UP => Axis.Y,
+        .LEFT, .RIGHT => Axis.X,
+    };
+}
 
 pub const Game = struct {
     head: Block,
@@ -87,9 +99,7 @@ pub const Game = struct {
             var queue_index = self.getQueueIndexByBlockIndex(index);
 
             if (self.queue.items.len > 0 and queue_index < self.queue.items.len) {
-                std.debug.print("{}\n", .{queue_index});
                 var target = &self.queue.items[queue_index];
-                std.debug.print("{}\n", .{target});
                 if (target != undefined and target.direction != block.direction) {
                     switch (target.direction) {
                         .UP, .DOWN => {
@@ -131,8 +141,11 @@ pub const Game = struct {
     }
 
     pub fn move(self: *Game, direction: Direction) !void {
+        if(getAxis(self.head.direction) == getAxis(direction)) {
+            return;
+        }
+
         const direction_changed = self.head.direction != direction;
-        std.debug.print("{}\n", .{self.queue.items.len});
         self.head.direction = direction;
         if (direction_changed or self.queue.items.len == 0) {
             try self.queue.append(Queue{ .direction = direction, .index = 0, .pos = Coordinates{ .x = self.head.x, .y = self.head.y } });
