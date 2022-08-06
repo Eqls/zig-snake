@@ -1,5 +1,12 @@
 const std = @import("std");
 
+const structs = @import("structs.zig");
+const consts = @import("consts.zig");
+const Square = structs.Square;
+const Coordinates = structs.Coordinates;
+
+const utils = @import("utils.zig");
+
 const Axis = enum {
     Y,
     X,
@@ -18,11 +25,6 @@ const Block = struct {
     direction: Direction,
 };
 
-const Coordinates = struct {
-    x: i32,
-    y: i32,
-};
-
 const Queue = struct {
     pos: Coordinates,
     direction: Direction,
@@ -31,11 +33,9 @@ const Queue = struct {
 
 const starting_x: i32 = 300;
 const starting_y: i32 = 200;
-pub const BLOCK_WIDTH: i32 = 20;
-pub const BLOCK_HEIGHT: i32 = 20;
 
 fn getAxis(direction: Direction) Axis {
-    return switch(direction) {
+    return switch (direction) {
         .DOWN, .UP => Axis.Y,
         .LEFT, .RIGHT => Axis.X,
     };
@@ -67,12 +67,22 @@ pub const Game = struct {
     }
 
     pub fn grow(self: *Game) !void {
-        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH * 2, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - BLOCK_WIDTH * 3, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 2, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 3, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 4, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 5, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 6, .y = starting_y, .direction = Direction.RIGHT });
+        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 7, .y = starting_y, .direction = Direction.RIGHT });
     }
 
-    // fn updateDirection
+    fn didHitAWall(self: Game) bool {
+        if (self.head.x >= consts.WINDOW_WIDTH or self.head.x <= 0 or self.head.y >= consts.WINDOW_HEIGHT or self.head.y <= 0) {
+            return true;
+        }
+
+        return false;
+    }
 
     fn getQueueIndexByBlockIndex(self: *Game, index: usize) usize {
         for (self.queue.items) |item, i| {
@@ -93,6 +103,10 @@ pub const Game = struct {
     }
 
     pub fn update(self: *Game) !void {
+        if (self.didHitAWall()) {
+            return;
+        }
+
         self.moveBlock(&self.head);
         for (self.tail.items) |_, index| {
             var block = &self.tail.items[index];
@@ -141,7 +155,7 @@ pub const Game = struct {
     }
 
     pub fn move(self: *Game, direction: Direction) !void {
-        if(getAxis(self.head.direction) == getAxis(direction)) {
+        if (getAxis(self.head.direction) == getAxis(direction)) {
             return;
         }
 

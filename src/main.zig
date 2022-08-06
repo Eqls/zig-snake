@@ -1,12 +1,15 @@
 const std = @import("std");
+
+const consts = @import("consts.zig");
+const WINDOW_WIDTH = consts.WINDOW_WIDTH;
+const WINDOW_HEIGHT = consts.WINDOW_HEIGHT;
+
 const g = @import("game.zig");
 const Game = g.Game;
 const c = @cImport({
     @cInclude("SDL.h");
 });
 const Direction = g.Direction;
-const BLOCK_HEIGHT = g.BLOCK_HEIGHT;
-const BLOCK_WIDTH = g.BLOCK_WIDTH;
 
 const fps: i32 = 60;
 const step_length: i32 = 100 / fps;
@@ -17,7 +20,7 @@ pub fn main() anyerror!void {
     _ = c.SDL_Init(c.SDL_INIT_VIDEO);
     defer c.SDL_Quit();
 
-    var window = c.SDL_CreateWindow("hello gamedev", c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, 640, 400, 0);
+    var window = c.SDL_CreateWindow("hello gamedev", c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     defer c.SDL_DestroyWindow(window);
 
     var renderer = c.SDL_CreateRenderer(window, 0, c.SDL_RENDERER_PRESENTVSYNC);
@@ -67,10 +70,10 @@ pub fn main() anyerror!void {
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
-        var head_rect = c.SDL_Rect{ .x = game.head.x, .y = game.head.y, .w = BLOCK_WIDTH, .h = BLOCK_HEIGHT };
+        var head_rect = c.SDL_Rect{ .x = game.head.x, .y = game.head.y, .w = consts.BLOCK_WIDTH, .h = consts.BLOCK_HEIGHT };
         _ = c.SDL_RenderFillRect(renderer, &head_rect);
         for (game.tail.items) |block| {
-            var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = BLOCK_WIDTH, .h = BLOCK_HEIGHT };
+            var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = consts.BLOCK_WIDTH, .h = consts.BLOCK_HEIGHT };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
         _ = c.SDL_RenderPresent(renderer);
