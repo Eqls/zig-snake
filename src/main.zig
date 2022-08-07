@@ -4,12 +4,14 @@ const consts = @import("consts.zig");
 const WINDOW_WIDTH = consts.WINDOW_WIDTH;
 const WINDOW_HEIGHT = consts.WINDOW_HEIGHT;
 
+const structs = @import("structs.zig");
+const Direction = structs.Direction;
+
 const g = @import("game.zig");
 const Game = g.Game;
 const c = @cImport({
     @cInclude("SDL.h");
 });
-const Direction = g.Direction;
 
 const fps: i32 = 60;
 const step_length: i32 = 100 / fps;
@@ -67,8 +69,20 @@ pub fn main() anyerror!void {
         }
 
         try game.update();
+
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
+
+        _ = c.SDL_SetRenderDrawColor(renderer, 0x00, 0x64, 0x00, 0xff);
+
+        var food_rect = c.SDL_Rect{
+            .x = game.food.rect.x,
+            .y = game.food.rect.y,
+            .w = game.food.rect.w,
+            .h = game.food.rect.h,
+        };
+        _ = c.SDL_RenderFillRect(renderer, &food_rect);
+
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
         var head_rect = c.SDL_Rect{ .x = game.head.x, .y = game.head.y, .w = consts.BLOCK_WIDTH, .h = consts.BLOCK_HEIGHT };
         _ = c.SDL_RenderFillRect(renderer, &head_rect);

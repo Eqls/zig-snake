@@ -1,26 +1,28 @@
-const std = @import("std");
-const structs = @impot("structs.zig");
-const Coodinates = structs.Coodinates;
-const consts = @import("consts.zig");
+const structs = @import("structs.zig");
+const Rect = structs.Rect;
+const utils = @import("utils.zig");
 
-const HEIGHT = 20;
-const WIDTH = 20;
+pub fn _shuffle() !Rect {
+    const randPos = try utils.generateRandomCoordinates();
 
-const Food = struct {
-    pos: Coodinates,
+    return Rect{
+        .x = randPos.x,
+        .y = randPos.y,
+        .w = 15,
+        .h = 15,
+    };
+}
 
-    pub fn init() Food {
+pub const Food = struct {
+    rect: Rect,
+
+    pub fn init() !Food {
         return Food{
-            .head = Block{
-                .x = starting_x,
-                .y = starting_y,
-                .direction = Direction.RIGHT,
-            },
-            .tail = std.ArrayList(Block).init(allocator),
-            .step_length = step_length,
-            .queue = std.ArrayList(Queue).init(allocator),
+            .rect = try _shuffle(),
         };
     }
 
-    pub fn relocate() void {}
+    pub fn shuffle(self: *Food) !void {
+        self.rect = try _shuffle();
+    }
 };

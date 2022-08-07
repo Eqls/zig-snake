@@ -2,22 +2,12 @@ const std = @import("std");
 
 const structs = @import("structs.zig");
 const consts = @import("consts.zig");
-const Square = structs.Square;
+const Rect = structs.Rect;
 const Coordinates = structs.Coordinates;
+const Direction = structs.Direction;
+const Food = @import("food.zig").Food;
 
 const utils = @import("utils.zig");
-
-const Axis = enum {
-    Y,
-    X,
-};
-
-pub const Direction = enum {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-};
 
 const Block = struct {
     x: i32,
@@ -34,18 +24,12 @@ const Queue = struct {
 const starting_x: i32 = 300;
 const starting_y: i32 = 200;
 
-fn getAxis(direction: Direction) Axis {
-    return switch (direction) {
-        .DOWN, .UP => Axis.Y,
-        .LEFT, .RIGHT => Axis.X,
-    };
-}
-
 pub const Game = struct {
     head: Block,
     tail: std.ArrayList(Block),
     step_length: i32,
     queue: std.ArrayList(Queue),
+    food: Food,
 
     pub fn init(step_length: i32) !Game {
         const allocator = std.heap.page_allocator;
@@ -59,6 +43,7 @@ pub const Game = struct {
             .tail = std.ArrayList(Block).init(allocator),
             .step_length = step_length,
             .queue = std.ArrayList(Queue).init(allocator),
+            .food = try Food.init(),
         };
     }
 
@@ -105,6 +90,15 @@ pub const Game = struct {
     pub fn update(self: *Game) !void {
         if (self.didHitAWall()) {
             return;
+        }
+
+        if (utils.isColliding(Rect{
+            .x = self.head.x,
+            .y = self.head.y,
+            .w = consts.BLOCK_WIDTH,
+            .h = consts.BLOCK_HEIGHT,
+        }, self.food.rect)) {
+            try self.food.shuffle();
         }
 
         self.moveBlock(&self.head);
@@ -155,7 +149,7 @@ pub const Game = struct {
     }
 
     pub fn move(self: *Game, direction: Direction) !void {
-        if (getAxis(self.head.direction) == getAxis(direction)) {
+        if (utils.getAxis(self.head.direction) == utils.getAxis(direction)) {
             return;
         }
 
