@@ -14,8 +14,8 @@ const c = @cImport({
 });
 
 const fps: i32 = 60;
-const step_length: i32 = 100 / fps;
-const time_per_frame: u32 = 1000 / fps;
+const step_length: i32 = @divTrunc(100, fps);
+const time_per_frame: u32 = @divTrunc(1000, fps);
 var sdl_window: *c.SDL_Window = undefined;
 
 pub fn main() anyerror!void {

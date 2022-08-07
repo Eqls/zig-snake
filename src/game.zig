@@ -52,18 +52,46 @@ pub const Game = struct {
     }
 
     pub fn grow(self: *Game) !void {
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 2, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 3, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 4, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 5, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 6, .y = starting_y, .direction = Direction.RIGHT });
-        try self.tail.append(Block{ .x = self.head.x - consts.BLOCK_WIDTH * 7, .y = starting_y, .direction = Direction.RIGHT });
+        var last_block = self.head;
+
+        if (self.tail.items.len > 0) {
+            last_block = self.tail.items[self.tail.items.len - 1];
+        }
+
+        var new_block = last_block;
+        switch (last_block.direction) {
+            .UP => new_block.y += consts.BLOCK_WIDTH,
+            .DOWN => new_block.y -= consts.BLOCK_WIDTH,
+            .LEFT => new_block.x += consts.BLOCK_WIDTH,
+            .RIGHT => new_block.x -= consts.BLOCK_WIDTH,
+        }
+
+        try self.tail.append(new_block);
     }
 
     fn didHitAWall(self: Game) bool {
         if (self.head.x >= consts.WINDOW_WIDTH or self.head.x <= 0 or self.head.y >= consts.WINDOW_HEIGHT or self.head.y <= 0) {
             return true;
+        }
+
+        return false;
+    }
+
+    fn didHitItTail(self: Game) bool {
+        for (self.tail.items) |block| {
+            if (utils.isColliding(Rect{
+                .x = self.head.x,
+                .y = self.head.y,
+                .w = consts.BLOCK_WIDTH,
+                .h = consts.BLOCK_HEIGHT,
+            }, Rect{
+                .x = block.x,
+                .y = block.y,
+                .w = consts.BLOCK_WIDTH,
+                .h = consts.BLOCK_HEIGHT,
+            })) {
+                return true;
+            }
         }
 
         return false;
@@ -87,11 +115,7 @@ pub const Game = struct {
         }
     }
 
-    pub fn update(self: *Game) !void {
-        if (self.didHitAWall()) {
-            return;
-        }
-
+    fn handleFood(self: *Game) !void {
         if (utils.isColliding(Rect{
             .x = self.head.x,
             .y = self.head.y,
@@ -99,7 +123,16 @@ pub const Game = struct {
             .h = consts.BLOCK_HEIGHT,
         }, self.food.rect)) {
             try self.food.shuffle();
+            try self.grow();
         }
+    }
+
+    pub fn update(self: *Game) !void {
+        if (self.didHitAWall()) {
+            return;
+        }
+
+        try self.handleFood();
 
         self.moveBlock(&self.head);
         for (self.tail.items) |_, index| {

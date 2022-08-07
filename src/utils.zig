@@ -6,10 +6,9 @@ const Rect = structs.Rect;
 const Direction = structs.Direction;
 const Axis = structs.Axis;
 
-pub fn isColliding(sq1: Rect, sq2: Rect) bool {
-    std.debug.print("{}\n", .{@divTrunc(sq1.w, 2)});
-    if (sq1.x + @divTrunc(sq1.w, 2) >= sq2.x - @divTrunc(sq2.w, 2) and sq1.x - @divTrunc(sq1.w, 2) <= sq2.x + @divTrunc(sq2.w, 2)) {
-        if (sq1.y + @divTrunc(sq1.h, 2) >= sq2.y - sq2.h and sq1.y - @divTrunc(sq1.h, 2) <= sq2.y + @divTrunc(sq2.h, 2)) {
+pub fn isColliding(rect1: Rect, rect2: Rect) bool {
+    if (rect1.x < rect2.x + rect2.w and rect1.x + rect1.w > rect2.x) {
+        if (rect1.y < rect2.y + rect2.h and rect1.y + rect1.h > rect2.y) {
             return true;
         }
     }
