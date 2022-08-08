@@ -84,10 +84,10 @@ pub fn main() anyerror!void {
         _ = c.SDL_RenderFillRect(renderer, &food_rect);
 
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
-        var head_rect = c.SDL_Rect{ .x = game.head.x, .y = game.head.y, .w = consts.BLOCK_WIDTH, .h = consts.BLOCK_HEIGHT };
+        var head_rect = c.SDL_Rect{ .x = game.head.rect.x, .y = game.head.rect.y, .w = game.head.rect.w, .h = game.head.rect.h };
         _ = c.SDL_RenderFillRect(renderer, &head_rect);
         for (game.tail.items) |block| {
-            var rect = c.SDL_Rect{ .x = block.x, .y = block.y, .w = consts.BLOCK_WIDTH, .h = consts.BLOCK_HEIGHT };
+            var rect = c.SDL_Rect{ .x = block.rect.x, .y = block.rect.y, .w = block.rect.w, .h = block.rect.h };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
         _ = c.SDL_RenderPresent(renderer);

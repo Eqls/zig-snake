@@ -10,8 +10,7 @@ const Food = @import("food.zig").Food;
 const utils = @import("utils.zig");
 
 const Block = struct {
-    x: i32,
-    y: i32,
+    rect: Rect,
     direction: Direction,
 };
 
@@ -36,8 +35,12 @@ pub const Game = struct {
 
         return Game{
             .head = Block{
-                .x = starting_x,
-                .y = starting_y,
+                .rect = Rect{
+                    .w = consts.BLOCK_WIDTH,
+                    .h = consts.BLOCK_HEIGHT,
+                    .x = starting_x,
+                    .y = starting_y,
+                },
                 .direction = Direction.RIGHT,
             },
             .tail = std.ArrayList(Block).init(allocator),
@@ -60,17 +63,17 @@ pub const Game = struct {
 
         var new_block = last_block;
         switch (last_block.direction) {
-            .UP => new_block.y += consts.BLOCK_WIDTH,
-            .DOWN => new_block.y -= consts.BLOCK_WIDTH,
-            .LEFT => new_block.x += consts.BLOCK_WIDTH,
-            .RIGHT => new_block.x -= consts.BLOCK_WIDTH,
+            .UP => new_block.rect.y += consts.BLOCK_WIDTH,
+            .DOWN => new_block.rect.y -= consts.BLOCK_WIDTH,
+            .LEFT => new_block.rect.x += consts.BLOCK_WIDTH,
+            .RIGHT => new_block.rect.x -= consts.BLOCK_WIDTH,
         }
 
         try self.tail.append(new_block);
     }
 
     fn didHitAWall(self: Game) bool {
-        if (self.head.x >= consts.WINDOW_WIDTH or self.head.x <= 0 or self.head.y >= consts.WINDOW_HEIGHT or self.head.y <= 0) {
+        if (self.head.rect.x >= consts.WINDOW_WIDTH or self.head.rect.x <= 0 or self.head.rect.y >= consts.WINDOW_HEIGHT or self.head.rect.y <= 0) {
             return true;
         }
 
@@ -79,17 +82,7 @@ pub const Game = struct {
 
     fn didHitItTail(self: Game) bool {
         for (self.tail.items) |block| {
-            if (utils.isColliding(Rect{
-                .x = self.head.x,
-                .y = self.head.y,
-                .w = consts.BLOCK_WIDTH,
-                .h = consts.BLOCK_HEIGHT,
-            }, Rect{
-                .x = block.x,
-                .y = block.y,
-                .w = consts.BLOCK_WIDTH,
-                .h = consts.BLOCK_HEIGHT,
-            })) {
+            if (utils.isColliding(self.head.rect, block.rect)) {
                 return true;
             }
         }
@@ -116,12 +109,7 @@ pub const Game = struct {
     }
 
     fn handleFood(self: *Game) !void {
-        if (utils.isColliding(Rect{
-            .x = self.head.x,
-            .y = self.head.y,
-            .w = consts.BLOCK_WIDTH,
-            .h = consts.BLOCK_HEIGHT,
-        }, self.food.rect)) {
+        if (utils.isColliding(self.head.rect, self.food.rect)) {
             try self.food.shuffle();
             try self.grow();
         }
@@ -144,8 +132,7 @@ pub const Game = struct {
                 if (target != undefined and target.direction != block.direction) {
                     switch (target.direction) {
                         .UP, .DOWN => {
-                            std.debug.print("target y:{} block y: {}\n", .{ target.pos.y, block.y });
-                            if (target.pos.x == block.x) {
+                            if (target.pos.x == block.rect.x) {
                                 block.direction = target.direction;
                                 if (target.index == self.tail.items.len - 1) {
                                     self.removeQueueItemByBlockIndex(index);
@@ -155,8 +142,7 @@ pub const Game = struct {
                             }
                         },
                         .LEFT, .RIGHT => {
-                            std.debug.print("target x:{} block x: {}\n", .{ target.pos.x, block.x });
-                            if (target.pos.y == block.y) {
+                            if (target.pos.y == block.rect.y) {
                                 block.direction = target.direction;
                                 if (target.index == self.tail.items.len - 1) {
                                     self.removeQueueItemByBlockIndex(index);
@@ -174,10 +160,10 @@ pub const Game = struct {
 
     fn moveBlock(self: *Game, block: *Block) void {
         switch (block.direction) {
-            .DOWN => block.y += self.step_length,
-            .UP => block.y -= self.step_length,
-            .RIGHT => block.x += self.step_length,
-            .LEFT => block.x -= self.step_length,
+            .DOWN => block.rect.y += self.step_length,
+            .UP => block.rect.y -= self.step_length,
+            .RIGHT => block.rect.x += self.step_length,
+            .LEFT => block.rect.x -= self.step_length,
         }
     }
 
@@ -189,7 +175,10 @@ pub const Game = struct {
         const direction_changed = self.head.direction != direction;
         self.head.direction = direction;
         if (direction_changed or self.queue.items.len == 0) {
-            try self.queue.append(Queue{ .direction = direction, .index = 0, .pos = Coordinates{ .x = self.head.x, .y = self.head.y } });
+            try self.queue.append(Queue{ .direction = direction, .index = 0, .pos = Coordinates{
+                .x = self.head.rect.x,
+                .y = self.head.rect.y,
+            } });
         }
     }
 };
