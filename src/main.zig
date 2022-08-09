@@ -37,18 +37,18 @@ pub fn main() anyerror!void {
     try game.grow();
     try game.grow();
     try game.grow();
-    try game.grow();
-    try game.grow();
-    try game.grow();
-    try game.grow();
-    try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
+    // try game.grow();
     mainloop: while (true) {
         if (start_time == 0) {
             start_time = c.SDL_GetTicks();
         } else {
             delta = end_time -% start_time;
         }
-        // std.debug.print("{}\n", .{delta});
+
         if (delta < time_per_frame) {
             _ = c.SDL_Delay(time_per_frame - delta);
         }
@@ -87,18 +87,18 @@ pub fn main() anyerror!void {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
         var head_rect = c.SDL_Rect{ .x = game.head.rect.x, .y = game.head.rect.y, .w = game.head.rect.w, .h = game.head.rect.h };
         _ = c.SDL_RenderFillRect(renderer, &head_rect);
-        if (game.head.use_corner) {
-            var rect = c.SDL_Rect{ .x = game.head.last_corner.x, .y = game.head.last_corner.y, .w = game.head.last_corner.w, .h = game.head.last_corner.h };
-            _ = c.SDL_RenderFillRect(renderer, &rect);
-        }
+
         for (game.tail.items) |block| {
-            if (block.use_corner) {
-                var rect = c.SDL_Rect{ .x = block.last_corner.x, .y = block.last_corner.y, .w = block.last_corner.w, .h = block.last_corner.h };
-                _ = c.SDL_RenderFillRect(renderer, &rect);
-            }
             var rect = c.SDL_Rect{ .x = block.rect.x, .y = block.rect.y, .w = block.rect.w, .h = block.rect.h };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
+
+        // Using queue items to hide corners
+        for (game.queue.items) |block| {
+            var rect = c.SDL_Rect{ .x = block.rect.x, .y = block.rect.y, .w = block.rect.w, .h = block.rect.h };
+            _ = c.SDL_RenderFillRect(renderer, &rect);
+        }
+
         _ = c.SDL_RenderPresent(renderer);
         start_time = end_time;
         end_time = c.SDL_GetTicks();
