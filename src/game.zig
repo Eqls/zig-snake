@@ -29,6 +29,8 @@ pub const Game = struct {
     step_length: i32,
     queue: std.ArrayList(Queue),
     food: Food,
+    gameover: bool,
+    length_since_last_turn: i32,
 
     pub fn init(step_length: i32) !Game {
         const allocator = std.heap.page_allocator;
@@ -43,6 +45,8 @@ pub const Game = struct {
                 },
                 .direction = Direction.RIGHT,
             },
+            .length_since_last_turn = 0,
+            .gameover = false,
             .tail = std.ArrayList(Block).init(allocator),
             .step_length = step_length,
             .queue = std.ArrayList(Queue).init(allocator),
@@ -116,17 +120,22 @@ pub const Game = struct {
     }
 
     pub fn update(self: *Game) !void {
-        if (self.didHitAWall()) {
+        if (self.didHitAWall() or self.gameover) {
             return;
         }
 
         try self.handleFood();
 
-        self.moveBlock(&self.head);
+        self.moveHeadBlock();
         for (self.tail.items) |_, index| {
             var direction_changed = false;
             var block = &self.tail.items[index];
+
             var queue_index = self.getQueueIndexByBlockIndex(index);
+
+            if (index != 0 and utils.isColliding(self.head.rect, block.rect)) {
+                self.gameover = true;
+            }
 
             if (self.queue.items.len > 0 and queue_index < self.queue.items.len) {
                 var target = &self.queue.items[queue_index];
@@ -162,6 +171,11 @@ pub const Game = struct {
         }
     }
 
+    fn moveHeadBlock(self: *Game) void {
+        self.length_since_last_turn += self.step_length;
+        self.moveBlock(&self.head);
+    }
+
     fn moveBlock(self: *Game, block: *Block) void {
         switch (block.direction) {
             .DOWN => block.rect.y += self.step_length,
@@ -172,7 +186,7 @@ pub const Game = struct {
     }
 
     pub fn move(self: *Game, direction: Direction) !void {
-        if (utils.getAxis(self.head.direction) == utils.getAxis(direction)) {
+        if (utils.getAxis(self.head.direction) == utils.getAxis(direction) or self.length_since_last_turn < self.head.rect.w) {
             return;
         }
 
@@ -180,6 +194,7 @@ pub const Game = struct {
         self.head.direction = direction;
 
         if (direction_changed or self.queue.items.len == 0) {
+            self.length_since_last_turn = 0;
             try self.queue.append(Queue{ .direction = direction, .index = 0, .rect = Rect{
                 .x = self.head.rect.x,
                 .y = self.head.rect.y,
