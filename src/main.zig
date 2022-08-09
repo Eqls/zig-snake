@@ -14,7 +14,7 @@ const c = @cImport({
 });
 
 const fps: i32 = 60;
-const step_length: i32 = @divTrunc(100, fps);
+const step_length: i32 = @divTrunc(60, fps);
 const time_per_frame: u32 = @divTrunc(1000, fps);
 var sdl_window: *c.SDL_Window = undefined;
 
@@ -35,13 +35,13 @@ pub fn main() anyerror!void {
     defer game.deinit();
 
     try game.grow();
-    // try game.grow();
-    // try game.grow();
-    // try game.grow();
-    // try game.grow();
-    // try game.grow();
-    // try game.grow();
-    // try game.grow();
+    try game.grow();
+    try game.grow();
+    try game.grow();
+    try game.grow();
+    try game.grow();
+    try game.grow();
+    try game.grow();
     mainloop: while (true) {
         if (start_time == 0) {
             start_time = c.SDL_GetTicks();
@@ -73,8 +73,8 @@ pub fn main() anyerror!void {
         _ = c.SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
         _ = c.SDL_RenderClear(renderer);
 
+        // Draws food
         _ = c.SDL_SetRenderDrawColor(renderer, 0x00, 0x64, 0x00, 0xff);
-
         var food_rect = c.SDL_Rect{
             .x = game.food.rect.x,
             .y = game.food.rect.y,
@@ -83,10 +83,19 @@ pub fn main() anyerror!void {
         };
         _ = c.SDL_RenderFillRect(renderer, &food_rect);
 
+        // Draws snake it self
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff);
         var head_rect = c.SDL_Rect{ .x = game.head.rect.x, .y = game.head.rect.y, .w = game.head.rect.w, .h = game.head.rect.h };
         _ = c.SDL_RenderFillRect(renderer, &head_rect);
+        if (game.head.use_corner) {
+            var rect = c.SDL_Rect{ .x = game.head.last_corner.x, .y = game.head.last_corner.y, .w = game.head.last_corner.w, .h = game.head.last_corner.h };
+            _ = c.SDL_RenderFillRect(renderer, &rect);
+        }
         for (game.tail.items) |block| {
+            if (block.use_corner) {
+                var rect = c.SDL_Rect{ .x = block.last_corner.x, .y = block.last_corner.y, .w = block.last_corner.w, .h = block.last_corner.h };
+                _ = c.SDL_RenderFillRect(renderer, &rect);
+            }
             var rect = c.SDL_Rect{ .x = block.rect.x, .y = block.rect.y, .w = block.rect.w, .h = block.rect.h };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }

@@ -11,6 +11,8 @@ const utils = @import("utils.zig");
 
 const Block = struct {
     rect: Rect,
+    last_corner: Rect,
+    use_corner: bool,
     direction: Direction,
 };
 
@@ -41,6 +43,13 @@ pub const Game = struct {
                     .x = starting_x,
                     .y = starting_y,
                 },
+                .last_corner = Rect{
+                    .x = 0,
+                    .y = 0,
+                    .w = 0,
+                    .h = 0,
+                },
+                .use_corner = false,
                 .direction = Direction.RIGHT,
             },
             .tail = std.ArrayList(Block).init(allocator),
@@ -124,6 +133,7 @@ pub const Game = struct {
 
         self.moveBlock(&self.head);
         for (self.tail.items) |_, index| {
+            var direction_changed = false;
             var block = &self.tail.items[index];
             var queue_index = self.getQueueIndexByBlockIndex(index);
 
@@ -133,6 +143,7 @@ pub const Game = struct {
                     switch (target.direction) {
                         .UP, .DOWN => {
                             if (target.pos.x == block.rect.x) {
+                                direction_changed = true;
                                 block.direction = target.direction;
                                 if (target.index == self.tail.items.len - 1) {
                                     self.removeQueueItemByBlockIndex(index);
@@ -144,6 +155,7 @@ pub const Game = struct {
                         .LEFT, .RIGHT => {
                             if (target.pos.y == block.rect.y) {
                                 block.direction = target.direction;
+                                direction_changed = true;
                                 if (target.index == self.tail.items.len - 1) {
                                     self.removeQueueItemByBlockIndex(index);
                                 } else {
@@ -154,6 +166,28 @@ pub const Game = struct {
                     }
                 }
             }
+
+            if (direction_changed and index != self.tail.items.len - 1) {
+                block.last_corner = block.rect;
+                block.use_corner = true;
+            }
+
+            var prev_block = &self.head;
+
+            if (index != 0) {
+                prev_block = &self.tail.items[index - 1];
+            }
+
+            if (prev_block.direction == block.direction) {
+                prev_block.last_corner = Rect{
+                    .x = 0,
+                    .y = 0,
+                    .w = 0,
+                    .h = 0,
+                };
+                prev_block.use_corner = false;
+            }
+
             self.moveBlock(block);
         }
     }
@@ -174,6 +208,11 @@ pub const Game = struct {
 
         const direction_changed = self.head.direction != direction;
         self.head.direction = direction;
+
+        if (direction_changed) {
+            self.head.last_corner = self.head.rect;
+            self.head.use_corner = true;
+        }
         if (direction_changed or self.queue.items.len == 0) {
             try self.queue.append(Queue{ .direction = direction, .index = 0, .pos = Coordinates{
                 .x = self.head.rect.x,
