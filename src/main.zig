@@ -19,7 +19,7 @@ const step_length: i32 = @divTrunc(60, fps);
 const time_per_frame: u32 = @divTrunc(1000, fps);
 var sdl_window: *c.SDL_Window = undefined;
 
-fn drawText(renderer: anytype, value: [][*:0]const u8) void {
+fn drawText(renderer: anytype, value: []const u8) void {
     //this opens a font style and sets a size
     var font = c.TTF_OpenFont("/Users/armandasgarsva/Library/Fonts/Iosevka-Bold.ttc", 20) orelse {
         c.SDL_Log("Unable to load font: %s", c.TTF_GetError());
@@ -35,7 +35,7 @@ fn drawText(renderer: anytype, value: [][*:0]const u8) void {
     // as TTF_RenderText_Solid could only be used on
     // SDL_Surface then you have to create the surface first
     var surface_message =
-        c.TTF_RenderText_Solid(font, value, color);
+        c.TTF_RenderText_Solid(font, value.ptr, color);
     defer c.SDL_FreeSurface(surface_message);
 
     // now you can convert it into a texture
@@ -149,15 +149,9 @@ pub fn main() anyerror!void {
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
 
-        // std.debug.print()
-        // Draw score
-        // const score = try std.fmt.allocPrint(
-        //     allocator,
-        //     "Score: ",
-        //     .{game.score},
-        // );
-
-        var score = [_][]const u8{ "Score: ", &[1][]const u8.{game.score} };
+        var score_array: [8]u8 = undefined;
+        const score_slice = score_array[0..];
+        const score = try std.fmt.bufPrint(score_slice, "{s} {}", .{ "SCORE:", game.score });
         drawText(renderer, score);
 
         _ = c.SDL_RenderPresent(renderer);
