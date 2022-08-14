@@ -11,6 +11,7 @@ const g = @import("game.zig");
 const Game = g.Game;
 const c = @cImport({
     @cInclude("SDL.h");
+    @cInclude("SDL_ttf.h");
 });
 
 const fps: i32 = 60;
@@ -18,9 +19,56 @@ const step_length: i32 = @divTrunc(60, fps);
 const time_per_frame: u32 = @divTrunc(1000, fps);
 var sdl_window: *c.SDL_Window = undefined;
 
+fn drawText(renderer: anytype, value: [][*:0]const u8) void {
+    //this opens a font style and sets a size
+    var font = c.TTF_OpenFont("/Users/armandasgarsva/Library/Fonts/Iosevka-Bold.ttc", 20) orelse {
+        c.SDL_Log("Unable to load font: %s", c.TTF_GetError());
+        return;
+    };
+    defer c.TTF_CloseFont(font);
+
+    // this is the color in rgb format,
+    // maxing out all would give you the color white,
+    // and it will be your text's color
+    var color = c.SDL_Color{ .r = 0, .g = 0, .b = 0, .a = 255 };
+
+    // as TTF_RenderText_Solid could only be used on
+    // SDL_Surface then you have to create the surface first
+    var surface_message =
+        c.TTF_RenderText_Solid(font, value, color);
+    defer c.SDL_FreeSurface(surface_message);
+
+    // now you can convert it into a texture
+    var message = c.SDL_CreateTextureFromSurface(renderer, surface_message);
+    defer c.SDL_DestroyTexture(message);
+
+    var message_rect = c.SDL_Rect{
+        .x = 10,
+        .y = 10,
+        .w = surface_message.*.w,
+        .h = surface_message.*.h,
+    };
+
+    // (0,0) is on the top left of the window/screen,
+    // think a rect as the text's box,
+    // that way it would be very simple to understand
+
+    // Now since it's a texture, you have to put RenderCopy
+    // in your game loop area, the area where the whole code executes
+
+    // you put the renderer's name first, the Message,
+    // the crop size (you can ignore this if you don't want
+    // to dabble with cropping), and the rect which is the size
+    // and coordinate of your texture
+    _ = c.SDL_RenderCopy(renderer, message, null, &message_rect);
+}
+
 pub fn main() anyerror!void {
     _ = c.SDL_Init(c.SDL_INIT_VIDEO);
     defer c.SDL_Quit();
+
+    _ = c.TTF_Init();
+    defer c.TTF_Quit();
 
     var window = c.SDL_CreateWindow("hello gamedev", c.SDL_WINDOWPOS_CENTERED, c.SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     defer c.SDL_DestroyWindow(window);
@@ -33,6 +81,8 @@ pub fn main() anyerror!void {
     var delta: u32 = 0;
     var game = try Game.init(step_length);
     defer game.deinit();
+
+    // const allocator = std.heap.page_allocator;
 
     try game.grow();
     try game.grow();
@@ -98,6 +148,17 @@ pub fn main() anyerror!void {
             var rect = c.SDL_Rect{ .x = block.rect.x, .y = block.rect.y, .w = block.rect.w, .h = block.rect.h };
             _ = c.SDL_RenderFillRect(renderer, &rect);
         }
+
+        // std.debug.print()
+        // Draw score
+        // const score = try std.fmt.allocPrint(
+        //     allocator,
+        //     "Score: ",
+        //     .{game.score},
+        // );
+
+        var score = [_][]const u8{ "Score: ", &[1][]const u8.{game.score} };
+        drawText(renderer, score);
 
         _ = c.SDL_RenderPresent(renderer);
         start_time = end_time;

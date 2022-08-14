@@ -31,6 +31,7 @@ pub const Game = struct {
     food: Food,
     gameover: bool,
     length_since_last_turn: i32,
+    score: u8,
 
     pub fn init(step_length: i32) !Game {
         const allocator = std.heap.page_allocator;
@@ -51,6 +52,7 @@ pub const Game = struct {
             .step_length = step_length,
             .queue = std.ArrayList(Queue).init(allocator),
             .food = try Food.init(),
+            .score = 0,
         };
     }
 
@@ -114,6 +116,7 @@ pub const Game = struct {
 
     fn handleFood(self: *Game) !void {
         if (utils.isColliding(self.head.rect, self.food.rect)) {
+            self.score += 1;
             try self.food.shuffle();
             try self.grow();
         }
