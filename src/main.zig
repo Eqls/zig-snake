@@ -20,7 +20,7 @@ const time_per_frame: u32 = @divTrunc(1000, fps);
 var sdl_window: *c.SDL_Window = undefined;
 
 fn drawText(renderer: anytype, value: []const u8) void {
-    //this opens a font style and sets a size
+    // this opens a font and sets a size
     var font = c.TTF_OpenFont("/Users/armandasgarsva/Library/Fonts/Iosevka-Bold.ttc", 20) orelse {
         c.SDL_Log("Unable to load font: %s", c.TTF_GetError());
         return;
