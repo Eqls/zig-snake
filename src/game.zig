@@ -56,8 +56,10 @@ pub const Game = struct {
         };
     }
 
-    pub fn deinit(self: Game) void {
+    pub fn deinit(self: *Game) void {
         self.tail.deinit();
+        self.queue.deinit();
+        self.* = undefined;
     }
 
     pub fn grow(self: *Game) !void {
@@ -123,8 +125,8 @@ pub const Game = struct {
     }
 
     pub fn update(self: *Game) !void {
-        if (self.didHitAWall() or self.gameover) {
-            return;
+        if (self.didHitAWall()) {
+            self.gameover = true;
         }
 
         try self.handleFood();

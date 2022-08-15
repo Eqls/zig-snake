@@ -55,10 +55,29 @@ pub fn main() anyerror!void {
                     c.SDLK_LEFT => try game.move(Direction.LEFT),
                     c.SDLK_UP => try game.move(Direction.UP),
                     c.SDLK_DOWN => try game.move(Direction.DOWN),
+                    c.SDLK_RETURN => if (game.gameover) {
+                        game.deinit();
+                        game = try Game.init(step_length);
+                        try game.grow();
+                        try game.grow();
+                        try game.grow();
+                    },
                     else => {},
                 },
                 else => {},
             }
+        }
+
+        if (game.gameover) {
+            renderer.clearFrame();
+            renderer.drawText("GAME OVER", .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 }, .{ 0x00, 0x00, 0x00, 0xff }, 30, true);
+            // var final_score_array: [8]u8 = undefined;
+            // const final_score_slice = final_score_array[0..];
+            // const final_score = try std.fmt.bufPrint(final_score_slice, "{s} {}", .{ "Your final score was: ", game.score });
+            // renderer.drawText(final_score, .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 + 40 }, .{ 0x00, 0x00, 0x00, 0xff }, 24, true);
+            renderer.drawText("(press ENTER to try again)", .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 + 80 }, .{ 0x00, 0x00, 0x00, 0xff }, 18, true);
+            renderer.redraw();
+            continue;
         }
 
         try game.update();
@@ -83,7 +102,7 @@ pub fn main() anyerror!void {
         var score_array: [8]u8 = undefined;
         const score_slice = score_array[0..];
         const score = try std.fmt.bufPrint(score_slice, "{s} {}", .{ "SCORE:", game.score });
-        renderer.drawText(score, .{ .x = 10, .y = 10 }, .{ 0x00, 0x00, 0x00, 0xff });
+        renderer.drawText(score, .{ .x = 10, .y = 10 }, .{ 0x00, 0x00, 0x00, 0xff }, 20, false);
 
         renderer.redraw();
         start_time = end_time;

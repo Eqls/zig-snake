@@ -51,9 +51,9 @@ pub const Renderer = struct {
         });
     }
 
-    pub fn drawText(self: *Renderer, value: []const u8, pos: Coordinates, color: @Vector(4, u8)) void {
+    pub fn drawText(self: *Renderer, value: []const u8, pos: Coordinates, color: @Vector(4, u8), font_size: i32, adjust_offset: bool) void {
         // this opens a font and sets a size
-        var font = c.TTF_OpenFont("/Users/armandasgarsva/Library/Fonts/Iosevka-Bold.ttc", 20) orelse {
+        var font = c.TTF_OpenFont("/Users/armandasgarsva/Library/Fonts/Iosevka-Bold.ttc", font_size) orelse {
             c.SDL_Log("Unable to load font: %s", c.TTF_GetError());
             return;
         };
@@ -74,9 +74,16 @@ pub const Renderer = struct {
         var message = c.SDL_CreateTextureFromSurface(self.renderer, surface_message);
         defer c.SDL_DestroyTexture(message);
 
+        var _pos = pos;
+
+        if (adjust_offset) {
+            _pos.x -= @divTrunc(surface_message.*.w, 2);
+            _pos.y -= @divTrunc(surface_message.*.h, 2);
+        }
+
         var message_rect = c.SDL_Rect{
-            .x = pos.x,
-            .y = pos.y,
+            .x = _pos.x,
+            .y = _pos.y,
             .w = surface_message.*.w,
             .h = surface_message.*.h,
         };
