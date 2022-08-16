@@ -11,10 +11,8 @@ const WINDOW_HEIGHT = consts.WINDOW_HEIGHT;
 const structs = @import("structs.zig");
 const Direction = structs.Direction;
 
-const g = @import("game.zig");
-const Game = g.Game;
-
-const Renderer = @import("renderer.zig").Renderer;
+const Game = @import("game.zig");
+const Renderer = @import("renderer.zig");
 
 const fps: i32 = 60;
 const step_length: i32 = @divTrunc(60, fps);
@@ -105,9 +103,9 @@ pub fn main() anyerror!void {
             renderer.drawRect(block.rect, .{ 0, 0, 0xff, 0xff });
         }
 
-        var score_array: [8]u8 = undefined;
-        const score_slice = score_array[0..];
-        const score = try std.fmt.bufPrint(score_slice, "{s} {}", .{ "SCORE:", game.score });
+        var score_array: [11]u8 = undefined;
+
+        const score = try std.fmt.bufPrint(score_array[0..], "{s} {}", .{ "SCORE:", game.score });
         renderer.drawText(score, .{ .x = 10, .y = 10 }, .{ 0x00, 0x00, 0x00, 0xff }, 20, false);
 
         renderer.redraw();

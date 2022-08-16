@@ -13,16 +13,15 @@ pub fn _shuffle() !Rect {
     };
 }
 
-pub const Food = struct {
-    rect: Rect,
+const Self = @This();
+rect: Rect,
 
-    pub fn init() !Food {
-        return Food{
-            .rect = try _shuffle(),
-        };
-    }
+pub fn init() !Self {
+    return Self{
+        .rect = try _shuffle(),
+    };
+}
 
-    pub fn shuffle(self: *Food) !void {
-        self.rect = try _shuffle();
-    }
-};
+pub fn shuffle(self: *Self) !void {
+    self.rect = try _shuffle();
+}
