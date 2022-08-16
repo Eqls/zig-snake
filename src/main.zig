@@ -55,6 +55,7 @@ pub fn main() anyerror!void {
                     c.SDLK_LEFT => try game.move(Direction.LEFT),
                     c.SDLK_UP => try game.move(Direction.UP),
                     c.SDLK_DOWN => try game.move(Direction.DOWN),
+                    c.SDLK_ESCAPE => game.pause(),
                     c.SDLK_RETURN => if (game.gameover) {
                         game.deinit();
                         game = try Game.init(step_length);
@@ -68,9 +69,11 @@ pub fn main() anyerror!void {
             }
         }
 
+        renderer.clearFrame();
+
         if (game.gameover) {
-            renderer.clearFrame();
             renderer.drawText("GAME OVER", .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 }, .{ 0x00, 0x00, 0x00, 0xff }, 30, true);
+            // TODO: fix issue when rendering this, it result in score on the top left all messed up.
             // var final_score_array: [8]u8 = undefined;
             // const final_score_slice = final_score_array[0..];
             // const final_score = try std.fmt.bufPrint(final_score_slice, "{s} {}", .{ "Your final score was: ", game.score });
@@ -80,9 +83,12 @@ pub fn main() anyerror!void {
             continue;
         }
 
-        try game.update();
-
-        renderer.clearFrame();
+        if (game.paused) {
+            renderer.drawText("PAUSED", .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 }, .{ 0x00, 0x00, 0x00, 0xff }, 30, true);
+            renderer.drawText("(press ESC to resume)", .{ .x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2 + 80 }, .{ 0x00, 0x00, 0x00, 0xff }, 18, true);
+        } else {
+            try game.update();
+        }
 
         // Draws food
         renderer.drawRect(game.food.rect, .{ 0x00, 0x64, 0x00, 0xff });

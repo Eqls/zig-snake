@@ -31,7 +31,8 @@ pub const Game = struct {
     food: Food,
     gameover: bool,
     length_since_last_turn: i32,
-    score: u8,
+    score: i32,
+    paused: bool,
 
     pub fn init(step_length: i32) !Game {
         const allocator = std.heap.page_allocator;
@@ -53,6 +54,7 @@ pub const Game = struct {
             .queue = std.ArrayList(Queue).init(allocator),
             .food = try Food.init(),
             .score = 0,
+            .paused = false,
         };
     }
 
@@ -207,5 +209,9 @@ pub const Game = struct {
                 .h = self.head.rect.h,
             } });
         }
+    }
+
+    pub fn pause(self: *Game) void {
+        self.paused = !self.paused;
     }
 };
