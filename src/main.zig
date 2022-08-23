@@ -3,14 +3,11 @@ const c = @cImport({
     @cInclude("SDL.h");
     @cInclude("SDL_ttf.h");
 });
-
 const consts = @import("consts.zig");
 const WINDOW_WIDTH = consts.WINDOW_WIDTH;
 const WINDOW_HEIGHT = consts.WINDOW_HEIGHT;
-
 const structs = @import("structs.zig");
 const Direction = structs.Direction;
-
 const Game = @import("game.zig");
 const Renderer = @import("renderer.zig");
 
@@ -23,7 +20,14 @@ pub fn main() anyerror!void {
     var end_time: u32 = 0;
     var delta: u32 = 0;
 
-    var game = try Game.init(step_length);
+    var gpa = std.heap.GeneralPurposeAllocator(.{
+        .enable_memory_limit = true,
+    }){};
+    defer _ = gpa.deinit();
+
+    var allocator = gpa.allocator();
+
+    var game = try Game.init(allocator, step_length);
     defer game.deinit();
 
     var renderer = try Renderer.init();
@@ -56,7 +60,7 @@ pub fn main() anyerror!void {
                     c.SDLK_ESCAPE => game.pause(),
                     c.SDLK_RETURN => if (game.gameover) {
                         game.deinit();
-                        game = try Game.init(step_length);
+                        game = try Game.init(allocator, step_length);
                         try game.grow();
                         try game.grow();
                         try game.grow();
@@ -103,10 +107,10 @@ pub fn main() anyerror!void {
             renderer.drawRect(block.rect, .{ 0, 0, 0xff, 0xff });
         }
 
-        var score_array: [11]u8 = undefined;
+        var buffer = [_]u8{undefined} ** 11;
+        const score_string = try std.fmt.bufPrint(&buffer, "SCORE: {d}", .{game.score});
 
-        const score = try std.fmt.bufPrint(score_array[0..], "{s} {}", .{ "SCORE:", game.score });
-        renderer.drawText(score, .{ .x = 10, .y = 10 }, .{ 0x00, 0x00, 0x00, 0xff }, 20, false);
+        renderer.drawText(score_string, .{ .x = 10, .y = 10 }, .{ 0x00, 0x00, 0x00, 0xff }, 20, false);
 
         renderer.redraw();
         start_time = end_time;

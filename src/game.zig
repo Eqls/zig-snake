@@ -34,9 +34,7 @@ length_since_last_turn: i32,
 score: i32,
 paused: bool,
 
-pub fn init(step_length: i32) !Self {
-    const allocator = std.heap.page_allocator;
-
+pub fn init(allocator: std.mem.Allocator, step_length: i32) !Self {
     return Self{
         .head = Block{
             .rect = Rect{

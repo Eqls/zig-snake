@@ -108,7 +108,7 @@ pub fn getTicks(_: Self) u32 {
 }
 
 pub fn clearFrame(self: Self) void {
-    _ = c.SDL_SetRenderDrawColor(self.renderer, 0xff, 0xff, 0xff, 0xff);
+    _ = c.SDL_SetRenderDrawColor(self.renderer, 0x67, 0x9A, 0xBE, 0xff);
     _ = c.SDL_RenderClear(self.renderer);
 }
 
